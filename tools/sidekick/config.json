@@ -78,6 +78,14 @@
       "includePaths": [ "**.docx**" ]
     },
     {
+      "id": "content-lake",
+      "title": "Find Assets",
+      "environments": [ "edit" ],
+      "isPalette": false,
+      "url": "https://test.findmy.media",
+      "includePaths": [ "**.docx**" ]
+    },
+    {
       "containerId": "tools",
       "id": "ost",
       "title": "Use offer",
