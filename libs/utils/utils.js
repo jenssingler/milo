@@ -17,6 +17,7 @@ const MILO_BLOCKS = [
   'carousel',
   'chart',
   'columns',
+  'content-lake',
   'faas',
   'faq',
   'featured-article',
@@ -77,6 +78,7 @@ const AUTO_BLOCKS = [
   { 'pdf-viewer': '.pdf' },
   { video: '.mp4' },
   { merch: '/tools/ost?' },
+  { 'content-lake': '/tools/content-lake' },
 ];
 const ENVS = {
   local: {
@@ -584,9 +586,9 @@ async function loadMartech(config) {
 async function loadPostLCP(config) {
   loadMartech(config);
   const header = document.querySelector('header');
-  if (header) { 
+  if (header) {
     header.classList.add('gnav-hide');
-    await loadBlock(header); 
+    await loadBlock(header);
     header.classList.remove('gnav-hide');
   }
   loadTemplate();

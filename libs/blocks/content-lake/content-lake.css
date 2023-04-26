@@ -1,0 +1,7 @@
+.content-lake-content .content-lake-buttons.hidden {
+  display: none
+}
+
+.content-lake-content .content-lake-buttons.shown {
+  display: block
+}

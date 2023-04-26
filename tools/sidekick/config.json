@@ -81,8 +81,9 @@
       "id": "content-lake",
       "title": "Find Assets",
       "environments": [ "edit" ],
-      "isPalette": false,
-      "url": "https://test.findmy.media",
+      "isPalette": true,
+      "url": "http://localhost:5500/tools/content-lake",
+      "paletteRect": "top: auto; bottom: 1px; left: 1px; height: 1px; width: 1px;",
       "includePaths": [ "**.docx**" ]
     },
     {
