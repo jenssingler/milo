@@ -489,6 +489,84 @@ export async function loadBlock(block) {
   return block;
 }
 
+const createSourceTag = (url, width) => {
+  const imgExtension = url.split('.').pop();
+  return createTag('source', {
+    type: 'image/webp',
+    ...(width > 600 ? { media: '(min-width: 600px)' } : {} ),
+    srcset: `${url}?width=${width}&format=webply&optimize=medium`,
+    'data-cai-type': imgExtension === 'png' ? 'image/png' : 'image/jpeg',
+  }, null);
+}
+
+const processCaiUrl = (text) => {
+  const url = new URL(text.trim());
+  return [url.hostname.includes(`.${SLD}.`) ? url.pathname : url, url];
+}
+
+const processCaiImage = (a) => {
+  const { innerText } = a;
+  let singleWidth = 0;
+  try {
+    // Mine for URL and alt text
+    const splitText = innerText.split('|');
+    if (splitText.length < 3) {
+      return;
+    }
+    const [firstSrc, firstUrl] = processCaiUrl(splitText.shift());
+    const nextText = splitText.shift();
+    if (nextText.includes('only-')) {
+      singleWidth = Number.parseInt(nextText.substring(nextText.indexOf('-')), 10);
+      if (Number.isNaN(singleWidth)) {
+        singleWidth = 2000;
+      }
+    }
+    const secondSrc = singleWidth === 0 ? processCaiUrl(nextText)[0] : null;
+
+    const altText = splitText.join('|').trim();
+
+    // Relative link checking
+    const hrefUrl = a.href.startsWith('/')
+      ? new URL(`${window.location.origin}${a.href}`)
+      : new URL(a.href);
+
+    const pic = createTag('picture', {
+      class: 'cai-pic'
+    }, null);
+
+    pic.append(createSourceTag(firstSrc, singleWidth ? singleWidth : 2000))
+    if (secondSrc) {
+      pic.append(createSourceTag(secondSrc, 750))
+    }
+
+    pic.append(createTag('img', {
+      loading: 'lazy',
+      src: `${firstSrc}?width=750&format=jpeg&optimize=medium`,
+      ...(altText ? { alt: altText} : {}),
+    }, null));
+
+    if (firstUrl.pathname === hrefUrl.pathname) {
+      a.parentElement.replaceChild(pic, a);
+      return pic;
+    }
+    a.textContent = '';
+    a.append(pic);
+    return a;
+  } catch (e) {
+    console.log('Failed to create CAI image.', e.message);
+    console.trace();
+    return a;
+  }
+}
+
+export function decorateCaiLinks(root = document) {
+  root.querySelectorAll('a').forEach((a) => {
+    if (a?.href?.includes('/cai/')) {
+      processCaiImage(a);
+    }
+  });
+}
+
 export function decorateSVG(a) {
   const { textContent, href } = a;
   if (!(textContent.includes('.svg') || href.includes('.svg'))) return a;
@@ -1180,6 +1258,69 @@ function decorateDocumentExtras() {
   });
 }
 
+const removeQuery = (srcUrl) => srcUrl.substring(0, srcUrl.indexOf('?'));
+
+async function buildCR(pictures) {
+  const imgSources = {};
+  pictures.forEach((pic) => {
+    pic.querySelectorAll('source').forEach((source) => {
+      const caiType = source.getAttribute('data-cai-type');
+      if (caiType) {
+        source.setAttribute('type', caiType);
+        source.setAttribute('srcset', removeQuery(source.getAttribute('srcset')));
+        source.removeAttribute('data-cai-type')
+      }
+    })
+    const img = pic.querySelector('img');
+    if (img) {
+      const imgSrc = img?.src;
+      if (imgSrc) {
+        const newSrc = removeQuery(imgSrc);
+        img.setAttribute('src', newSrc);
+        imgSources[newSrc] = {};
+        const popOver = createTag('cai-popover', {
+          interactive: 'interactive',
+          style: 'float: right; position: absolute; top: 10px; right: 10px; z-index: 5',
+        }, null);
+        popOver.append(createTag('cai-indicator', {slot: 'trigger'}, null));
+        popOver.append(createTag('cai-manifest-summary', {locale: 'en-US', slot: 'content'}, null));
+        pic.append(popOver);
+      }
+    }
+  });
+  const caiWorker = new Worker('/libs/utils/cai-worker.js');
+  caiWorker.postMessage(imgSources);
+  caiWorker.onmessage = async function (e) {
+    const updatedImgSources = e.data;
+    for (const pic of pictures) {
+      const img = pic.querySelector('img');
+      const imgSrc = img?.src;
+      if (imgSrc) {
+        const caiData = updatedImgSources[imgSrc];
+        if (caiData) {
+          const manifestSummary = pic.querySelector('cai-manifest-summary');
+          if (manifestSummary) {
+            manifestSummary.manifestStore = caiData.l2ManifestStore;
+            manifestSummary.viewMoreUrl = caiData.verifyUrl;
+          }
+        }
+      }
+    }
+    // needed for CAI web components
+    await import('../deps/c2pa/c2pa-wc.min.js');
+  }
+}
+
+async function loadContentCredentials() {
+  const cr = getMetadata('credentials');
+  if (cr !== 'off') {
+    const pictures = document.querySelectorAll('picture.cai-pic');
+    if (pictures.length) {
+      await buildCR(pictures);
+    }
+  }
+}
+
 async function documentPostSectionLoading(config) {
   decorateFooterPromo();
 
@@ -1211,6 +1352,7 @@ async function documentPostSectionLoading(config) {
   import('../martech/attributes.js').then((analytics) => {
     document.querySelectorAll('main > div').forEach((section, idx) => analytics.decorateSectionAnalytics(section, idx, config));
   });
+  await loadContentCredentials();
 
   document.body.appendChild(createTag('div', { id: 'page-load-ok-milo', style: 'display: none;' }));
 }

@@ -15,6 +15,7 @@ import {
   loadLana,
   setConfig,
   getMetadata,
+  decorateCaiLinks
 } from '../utils/utils.js';
 import locales from '../utils/locales.js';
 
@@ -55,6 +56,10 @@ const config = {
   breadcrumbs: 'on',
   // taxonomyRoot: '/your-path-here',
 };
+
+(function processCaiLinks() {
+  decorateCaiLinks();
+}());
 
 const eagerLoad = (img) => {
   img?.setAttribute('loading', 'eager');
