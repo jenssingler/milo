@@ -102,6 +102,15 @@
   padding: var(--spacing-xxs);
 }
 
+.section div.section-background {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+}
+
 .section picture.section-background {
   display: block;
   position: absolute;
@@ -192,10 +201,6 @@
   background-color: var(--color-white);
 }
 
-.section.sticky-top:has(.notification.pill) {
-  height: 0;
-}
-
 .section.sticky-bottom {
   position: sticky;
   bottom: 0;
@@ -205,7 +210,7 @@
 
 .section.sticky-bottom.promo-sticky-section {
   background: none;
-  z-index: 40000;
+  z-index: 4;
 }
 
 .section.sticky-bottom.popup {
@@ -248,24 +253,28 @@ main > .section[class*='-up'] > .content {
   .section.two-up.reverse-mobile > div:nth-child(2) {
     order: 1;
   }
-
 }
 
 @media screen and (min-width: 600px) and (max-width: 1200px) {
   .section.five-up {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
-  
-  .section.one-up-tablet { grid-template-columns: 1fr; }
-  .section.three-up-tablet { grid-template-columns: repeat(3, 1fr); }
-  .section.four-up-tablet { grid-template-columns: repeat(4, 1fr); }
 
   .section.masonry-layout {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  }  
-  
+  }
+
   .section.masonry-layout .grid-full-width:first-child {
     grid-column: 1 / -1;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .section.two-up.one-up-tablet,
+  .section.three-up.one-up-tablet,
+  .section.four-up.one-up-tablet,
+  .section.five-up.one-up-tablet {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -328,12 +337,12 @@ main > .section[class*='-up'] > .content {
   .section.grid-template-columns-3-1 {
     grid-template-columns: 3fr 1fr;
   }
-  
+
   .section.grid-width-6-desktop {
     padding-left: var(--grid-margins-width-6);
     padding-right: var(--grid-margins-width-6);
   }
-  
+
   .section.grid-width-8-desktop {
     padding-left: var(--grid-margins-width-8);
     padding-right: var(--grid-margins-width-8);
@@ -361,4 +370,29 @@ main > .section[class*='-up'] > .content {
   .section.masonry-layout .grid-span-9 {grid-column: span 9; }
   .section.masonry-layout .grid-span-10 {grid-column: span 10; }
   .section.masonry-layout .grid-span-11 {grid-column: span 11; }
+}
+
+/* ace0861 new css */
+.section.has-background .mobile-only,
+.section.has-background .tablet-only,
+.section.has-background .desktop-only {
+  display: none;
+}
+
+@media screen and (max-width: 599px) {
+  .section.has-background .mobile-only {
+    display: block;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 1199px) {
+  .section.has-background .tablet-only {
+    display: block;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .section.has-background .desktop-only {
+    display: block;
+  }
 }

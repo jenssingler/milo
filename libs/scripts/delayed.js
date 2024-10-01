@@ -71,9 +71,9 @@ const loadDelayed = ([
   loadIms,
 ], DELAY = 3000) => new Promise((resolve) => {
   setTimeout(() => {
-    loadPrivacy(getConfig, loadScript);
-    loadJarvisChat(getConfig, getMetadata, loadScript, loadStyle);
-    loadGoogleLogin(getMetadata, loadIms, loadScript);
+    // loadPrivacy(getConfig, loadScript);
+    // loadJarvisChat(getConfig, getMetadata, loadScript, loadStyle);
+    // loadGoogleLogin(getMetadata, loadIms, loadScript);
     if (getMetadata('interlinks') === 'on') {
       const { locale } = getConfig();
       const path = `${locale.contentRoot}/keywords.json`;

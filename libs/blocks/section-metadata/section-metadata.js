@@ -1,16 +1,42 @@
 import { handleFocalpoint } from '../../utils/decorate.js';
+import { createTag } from '../../utils/utils.js';
 
-function handleBackground(div, section) {
-  const pic = div.background.content?.querySelector('picture');
+function handleBackground(background, section, breakpoints) {
+  const pic = background.content?.querySelector('picture');
   if (pic) {
     section.classList.add('has-background');
-    pic.classList.add('section-background');
-    handleFocalpoint(pic, div.background.content);
+    pic.className = `section-background ${breakpoints}`;
+    handleFocalpoint(pic, background.content);
     section.insertAdjacentElement('afterbegin', pic);
   } else {
-    const color = div.background.content?.textContent;
+    const color = background.content?.textContent;
     if (color) {
-      section.style.background = color;
+      if (!breakpoints) {
+        section.style.background = color;
+      } else {
+        const backgroundDiv = createTag('DIV', {
+          class: `section-background ${breakpoints}`,
+          style: `background: ${color}`,
+        }, '');
+        section.prepend(backgroundDiv);
+      }
+    }
+  }
+}
+
+function handleBackgrounds(backgrounds, section) {
+  if (backgrounds.length === 1) {
+    handleBackground(backgrounds[0], section, ''); //  needed the 3rd argument or else its undefined
+  } else if (backgrounds.length > 1) {
+    const viewports = ['mobile-only', 'tablet-only', 'desktop-only'];
+    if (backgrounds.length === 2) {
+      const [mobile, desktop] = backgrounds;
+      handleBackground(mobile, section, viewports.slice(0, 2).join(' '));
+      handleBackground(desktop, section, viewports[2]);
+    } else {
+      backgrounds.forEach((e, i) => {
+        handleBackground(e, section, viewports[i]);
+      });
     }
   }
 }
@@ -69,7 +95,17 @@ export default async function init(el) {
   const section = el.closest('.section');
   const metadata = getMetadata(el);
   if (metadata.style) await handleStyle(metadata.style.text, section);
-  if (metadata.background) handleBackground(metadata, section);
+  if (metadata.background || metadata['background-mobile'] || metadata['background-tablet'] || metadata['background-desktop']) {
+    const backgrounds = [];
+    if (metadata.background) {
+      backgrounds.push(metadata.background);
+    } else if (metadata['background-mobile']) {
+      backgrounds.push(metadata['background-mobile']);
+    } else backgrounds.push('');
+    if (metadata['background-tablet']) backgrounds.push(metadata['background-tablet']);
+    if (metadata['background-desktop']) backgrounds.push(metadata['background-desktop']);
+    handleBackgrounds(backgrounds, section);
+  }
   if (metadata.layout) handleLayout(metadata.layout.text, section);
   if (metadata.masonry) handleMasonry(metadata.masonry.text, section);
   if (metadata.delay) handleDelay(metadata.delay.text, section);
