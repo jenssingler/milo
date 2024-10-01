@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { createTag, getConfig, loadArea, localizeLink, customFetch } from '../../utils/utils.js';
+import {createTag, getConfig, loadArea, localizeLink, customFetch, decorateCaiLinks} from '../../utils/utils.js';
 
 const fragMap = {};
 
@@ -113,6 +113,7 @@ export default async function init(a) {
   if (!inline) {
     fragment.append(...sections);
   }
+  decorateCaiLinks(fragment);
 
   updateFragMap(fragment, a, relHref);
   if (a.dataset.manifestId || a.dataset.adobeTargetTestid) {
